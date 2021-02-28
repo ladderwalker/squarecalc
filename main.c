@@ -1,18 +1,18 @@
-
-//Optional: Use OpenGL to do rendering on appropriate systems.
-#define CNFGOGL
-
-#define HAS_XSHAPE
-#define HAS_XINERAMA
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image/stb_image.h"
+
 #define CNFG_IMPLEMENTATION
 #include "rawdraw/os_generic.h"
 #include "rawdraw/CNFG.h"
+//#define CNFGOGL
+#define HAS_XSHAPE
+#define HAS_XINERAMA
+
 #define RDUI_IMPLEMENTATION
 #include "rdui/RDUI.h"
 #include "rdui/default-elements.h"
@@ -103,6 +103,15 @@ void FieldTypeHandler_y(struct RDUIFieldData* data) {
 int main(int argv, char* argc[]) {
     RDUIInit();
 
+    // Load image
+	int width, height, channels;
+	unsigned char *img = stbi_load("resources/calcbut.png", &width, &height, &channels, 0);
+	if(img == NULL)
+	{
+		printf("You ain't got no pict-shuh\n");
+		exit(1);
+	}
+
     CNFGBGColor = 0x444444ff; //Dark Grey Background
 
     int winWidth = 1440, winHeight = 777;
@@ -172,7 +181,7 @@ int main(int argv, char* argc[]) {
 
 	struct RDUIOptionsBoxData options_box_ydata = {
 		.position = {
-			.x = 1165,
+			.x = 1300,
 			.y = 370
 		},
 		.color = 0x555555ff,
@@ -197,6 +206,7 @@ int main(int argv, char* argc[]) {
 
 		.clicked_handler = ButtonClickedHandler
 	};
+
 
 
 
@@ -250,6 +260,8 @@ int main(int argv, char* argc[]) {
 
         CNFGPenX = 5; CNFGPenY = 5;
 		CNFGDrawText( final_hypo, 20 );
+
+        CNFGBlitImage((unsigned int*)img, 25, 420, width, height);
 
         CNFGSwapBuffers();
 	}
