@@ -37,13 +37,19 @@ double side_y_dec = 0;
 double hypote = 0;
 double fracdec[] = { 0.0, 0.0625, 0.125, 0.1875, 0.25, 0.3125, 0.375, 0.4375, 0.5, 0.5625,
 0.625, 0.6875, 0.75, 0.8125, 0.875, 0.9375 };
+char* options[] = {"None", "1/16", "1/8", "3/16", "1/4", "5/16", "3/8", "7/16", "1/2",
+"9/16", "5/8", "11/16", "3/4", "13/16", "7/8", "15/16", NULL};
 char final_hypo[50];
 
 void HandleKey( int keycode, int bDown ) {
     OIHandleKey(keycode, bDown);
 	RDUIHandleKeyImpl(menu, keycode, bDown);
+    if( keycode == CNFG_KEY_ESCAPE ) {
+        printf("See ya, wouldn't wanna be ya!");
+        exit( 0 );
+    }
 
-	printf("key %d\n", keycode);
+	//printf("key %d\n", keycode);
 }
 
 void HandleButton( int x, int y, int button, int bDown ) {
@@ -66,9 +72,48 @@ void ButtonClickedHandler(struct RDUIButtonData* data) {
     hypote = sqrt(( side_x * side_x ) + ( side_y * side_y ));
 
     //convert to string
-    char in[] = " inches";
-    sprintf( final_hypo, "%0.2f", hypote );
-    strcat( final_hypo, in );
+    int hfrc;
+    double hypfrac = hypote - floor(hypote);
+    if(hypfrac < .031) {
+        hfrc = 0;
+    } else if(hypfrac >= .0310 && hypfrac < .0925) {
+        hfrc = 1;
+    } else if(hypfrac >= .0925 && hypfrac < .1560) {
+        hfrc = 2;
+    } else if(hypfrac >= .1560 && hypfrac < .2180) {
+        hfrc = 3;
+    } else if(hypfrac >= .2180 && hypfrac < .2810) {
+        hfrc = 4;
+    } else if(hypfrac >= .2810 && hypfrac < .3430) {
+        hfrc = 5;
+    } else if(hypfrac >= .3430 && hypfrac < .4060) {
+        hfrc = 6;
+    } else if(hypfrac >= .4060 && hypfrac < .4680) {
+        hfrc = 7;
+    } else if(hypfrac >= .4680 && hypfrac < .5310) {
+        hfrc = 8;
+    } else if(hypfrac >= .5310 && hypfrac < .5930) {
+        hfrc = 9;
+    } else if(hypfrac >= .5930 && hypfrac < .6560) {
+        hfrc = 10;
+    } else if(hypfrac >= .6560 && hypfrac < .7180) {
+        hfrc = 11;
+    } else if(hypfrac >= .7180 && hypfrac < .7810) {
+        hfrc = 12;
+    } else if(hypfrac >= .7810 && hypfrac < .8430) {
+        hfrc = 13;
+    } else if(hypfrac >= .8430 && hypfrac < .9060) {
+        hfrc = 14;
+    } else if(hypfrac >= .9060) {
+        hfrc = 15;
+    }
+    int hypint = (int)floor(hypote);
+
+    if(hfrc == 0) {
+        sprintf(final_hypo, "%d inches", hypint);
+    } else {
+        sprintf(final_hypo, "%d %s inches", hypint, options[hfrc]);
+    }
 
     //clear the variables
     side_x_dec = 0;
@@ -112,7 +157,7 @@ int main(int argv, char* argc[]) {
 		exit(1);
 	}
 
-    CNFGBGColor = 0x444444ff; //Dark Grey Background
+    CNFGBGColor = 0x4E545Fff; //Dark Grey Background
 
     int winWidth = 1440, winHeight = 777;
 
@@ -123,9 +168,6 @@ int main(int argv, char* argc[]) {
 
     //CNFGSetupFullscreen( "SquareCalc", 0 );
     CNFGSetup( "SquareCalc", winWidth, winHeight );
-
-    char* options[] = {"None", "1/16", "1/8", "3/16", "1/4", "5/16", "3/8", "7/16", "1/2",
-    "9/16", "5/8", "11/16", "3/4", "13/16", "7/8", "15/16", NULL};
 
 
 
@@ -153,7 +195,7 @@ int main(int argv, char* argc[]) {
 			.x = 915,
 			.y = 370
 		},
-		.color = 0x555555ff,
+		.color = 0x18191bff,
 		.font_color = 0xffffffff,
 		.font_size = 4,
 		.padding = 0,
@@ -168,7 +210,7 @@ int main(int argv, char* argc[]) {
 		.min_width = 50,
 		.max_width = 300,
 		.position = {
-			.x = 1060,
+			.x = 1165,
 			.y = 370
 		},
 		.font_color = 0x000000ff,
@@ -181,10 +223,10 @@ int main(int argv, char* argc[]) {
 
 	struct RDUIOptionsBoxData options_box_ydata = {
 		.position = {
-			.x = 1300,
+			.x = 1270,
 			.y = 370
 		},
-		.color = 0x555555ff,
+		.color = 0x18191bff,
 		.font_color = 0xffffffff,
 		.font_size = 4,
 		.padding = 0,
@@ -201,7 +243,7 @@ int main(int argv, char* argc[]) {
 		.font_color = 0xffffffff,
 		.position = {
 			.x = 25,
-			.y = 420
+			.y = 600
 		},
 
 		.clicked_handler = ButtonClickedHandler
@@ -226,18 +268,20 @@ int main(int argv, char* argc[]) {
 	while(1)
 	{
 
-        printf("\n\n\n\n\n%s\n\n%lf\n%lf\n%lf\n", &final_hypo, hypote, side_x_dec, side_y_dec  );
-        //scanf("%s", str1);
+
         short w, h;
 		CNFGClearFrame();
 		CNFGHandleInput();
 		CNFGGetDimensions( &w, &h );
 
-		//Change color to white.
-		//CNFGColor( 0xFFFFFF );
+		//Change color to Black.
+		CNFGColor( 0x000000FF );
 
+        //Draw a triangle
+		RDPoint pointsblk[3] = { { triABX - 5, triAY + 5 }, { triABX - 5, triBCY + 5 }, { triCX - 5, triBCY + 5 } };
+		CNFGTackPoly( pointsblk, 3 );
 
-        // Red Color Select
+        // Blue Color Select
 		CNFGColor( 0x001440FF );
 
 		//Draw a triangle
@@ -248,7 +292,21 @@ int main(int argv, char* argc[]) {
 		CNFGColor( 0x000000FF );
 
 		//Draw Black Box
+		CNFGTackRectangle( 211, 305, 311, 405 );
+
+        //Tan? Color Select
+		CNFGColor( 0x666862FF );
+
+		//Draw Tan? Box
 		CNFGTackRectangle( 216, 300, 316, 400 );
+
+
+        //Black Color Select
+		CNFGColor( 0x000000FF );
+
+		//Draw Black Box
+		CNFGTackRectangle( 495, 605, 595, 705 );
+
 
         //Dark Red Color Select
 		CNFGColor( 0x800000FF );
@@ -256,12 +314,44 @@ int main(int argv, char* argc[]) {
 		//Draw Red Rec
 		CNFGTackRectangle( 500, 600, 600, 700 );
 
+        //Black Color Select
+		CNFGColor( 0x000000FF );
+
+		//Draw Black Box
+		CNFGTackRectangle( 20, 605, 320, 693 );
+
+		//Draw Black Box
+		CNFGTackRectangle( 790, 360, 1075, 430 );
+
+        //Draw Black Box
+		CNFGTackRectangle( 1135, 360, 1420, 430 );
+
+        //Tan? Color Select
+		CNFGColor( 0x666862FF );
+
+		//Draw Tan? Box
+		CNFGTackRectangle( 795, 355, 1080, 425 );
+
+        //Dark Red Color Select
+		CNFGColor( 0x800000FF );
+
+		//Draw Red Rec
+		CNFGTackRectangle( 1140, 355, 1425, 425 );
+
+        CNFGColor( 0xffffffff );
+
+        CNFGPenX = 995; CNFGPenY = 375;
+		CNFGDrawText( "inches", 3 );
+
+        CNFGPenX = 1352; CNFGPenY = 375;
+		CNFGDrawText( "inches", 3 );
+
         RDUIDispatchEvent(menu, RDUIEvent_render, NULL);
 
         CNFGPenX = 5; CNFGPenY = 5;
 		CNFGDrawText( final_hypo, 20 );
 
-        CNFGBlitImage((unsigned int*)img, 25, 420, width, height);
+        CNFGBlitImage((unsigned int*)img, 25, 600, width, height);
 
         CNFGSwapBuffers();
 	}
