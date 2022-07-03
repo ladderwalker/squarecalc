@@ -2,16 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <unistd.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image/stb_image.h"
 
 #define CNFG_IMPLEMENTATION
-#include "rawdraw/os_generic.h"
-#include "rawdraw/CNFG.h"
-//#define CNFGOGL
+#define _CNFG_FANCYFONT
+
+#include "rawdraw_sf.h"
+#define CNFGOGL
 #define HAS_XSHAPE
 #define HAS_XINERAMA
+
 
 #define RDUI_IMPLEMENTATION
 #include "rdui/RDUI.h"
@@ -40,16 +43,84 @@ double fracdec[] = { 0.0, 0.0625, 0.125, 0.1875, 0.25, 0.3125, 0.375, 0.4375, 0.
 char* options[] = {"None", "1/16", "1/8", "3/16", "1/4", "5/16", "3/8", "7/16", "1/2",
 "9/16", "5/8", "11/16", "3/4", "13/16", "7/8", "15/16", NULL};
 char final_hypo[50];
+int tape_measure_LUT[10000];
+
+void poulateTapeMeasureLUT() {
+	for(int i = 0; i < 310; i++) {
+		tape_measure_LUT[i] = 0;
+	}
+	for(int i = 311; i < 925; i++) {
+		tape_measure_LUT[i] = 1;
+	}
+	for(int i = 926; i < 1560; i++) {
+		tape_measure_LUT[i] = 2;
+	}
+	for(int i = 1561; i < 2180; i++) {
+		tape_measure_LUT[i] = 3;
+	}
+	for(int i = 2181; i < 2810; i++) {
+		tape_measure_LUT[i] = 4;
+	}
+	for(int i = 2811; i < 3430; i++) {
+		tape_measure_LUT[i] = 5;
+	}
+	for(int i = 3431; i < 4060; i++) {
+		tape_measure_LUT[i] = 6;
+	}
+	for(int i = 4061; i < 4680; i++) {
+		tape_measure_LUT[i] = 7;
+	}
+	for(int i = 4681; i < 5310; i++) {
+		tape_measure_LUT[i] = 8;
+	}
+	for(int i = 5311; i < 5930; i++) {
+		tape_measure_LUT[i] = 9;
+	}
+	for(int i = 5931; i < 6560; i++) {
+		tape_measure_LUT[i] = 10;
+	}
+	for(int i = 6561; i < 7180; i++) {
+		tape_measure_LUT[i] = 11;
+	}
+	for(int i = 7181; i < 7810; i++) {
+		tape_measure_LUT[i] = 12;
+	}
+	for(int i = 7811; i < 8430; i++) {
+		tape_measure_LUT[i] = 13;
+	}
+	for(int i = 8431; i < 9060; i++) {
+		tape_measure_LUT[i] = 14;
+	}
+	for(int i = 9061; i < 9700; i++) {
+		tape_measure_LUT[i] = 15;
+	}
+}
+
+int getFraction(double in) {
+	double fractpart, fractfloor, intpart;
+	int fractfloorint, result;
+
+	fractpart = modf(in, &intpart);
+	fractfloor = floor(fractpart * 10000);
+	fractfloorint = (int)fractfloor;
+
+	if(fractfloorint > 9700) {
+		result = 16;
+	} else {
+		result = tape_measure_LUT[fractfloorint];
+	}
+
+	return result;
+}
 
 void HandleKey( int keycode, int bDown ) {
     OIHandleKey(keycode, bDown);
 	RDUIHandleKeyImpl(menu, keycode, bDown);
     if( keycode == CNFG_KEY_ESCAPE ) {
-        printf("See ya, wouldn't wanna be ya!");
         exit( 0 );
     }
 
-	//printf("key %d\n", keycode);
+
 }
 
 void HandleButton( int x, int y, int button, int bDown ) {
@@ -67,59 +138,32 @@ void HandleDestroy() {}
 
 void ButtonClickedHandler(struct RDUIButtonData* data) {
     //do the math
-    side_x += side_x_dec;
-    side_y += side_y_dec;
-    hypote = sqrt(( side_x * side_x ) + ( side_y * side_y ));
+    double adjacent, opposite;
+    adjacent = side_x + side_x_dec;
+    opposite = side_y + side_y_dec;
+    hypote = sqrt(( adjacent * adjacent ) + ( opposite * opposite ));
 
     //convert to string
     int hfrc;
-    double hypfrac = hypote - floor(hypote);
-    if(hypfrac < .031) {
-        hfrc = 0;
-    } else if(hypfrac >= .0310 && hypfrac < .0925) {
-        hfrc = 1;
-    } else if(hypfrac >= .0925 && hypfrac < .1560) {
-        hfrc = 2;
-    } else if(hypfrac >= .1560 && hypfrac < .2180) {
-        hfrc = 3;
-    } else if(hypfrac >= .2180 && hypfrac < .2810) {
-        hfrc = 4;
-    } else if(hypfrac >= .2810 && hypfrac < .3430) {
-        hfrc = 5;
-    } else if(hypfrac >= .3430 && hypfrac < .4060) {
-        hfrc = 6;
-    } else if(hypfrac >= .4060 && hypfrac < .4680) {
-        hfrc = 7;
-    } else if(hypfrac >= .4680 && hypfrac < .5310) {
-        hfrc = 8;
-    } else if(hypfrac >= .5310 && hypfrac < .5930) {
-        hfrc = 9;
-    } else if(hypfrac >= .5930 && hypfrac < .6560) {
-        hfrc = 10;
-    } else if(hypfrac >= .6560 && hypfrac < .7180) {
-        hfrc = 11;
-    } else if(hypfrac >= .7180 && hypfrac < .7810) {
-        hfrc = 12;
-    } else if(hypfrac >= .7810 && hypfrac < .8430) {
-        hfrc = 13;
-    } else if(hypfrac >= .8430 && hypfrac < .9060) {
-        hfrc = 14;
-    } else if(hypfrac >= .9060) {
-        hfrc = 15;
-    }
+    hfrc = getFraction(hypote);
+
     int hypint = (int)floor(hypote);
 
     if(hfrc == 0) {
         sprintf(final_hypo, "%d inches", hypint);
+    } else if(hfrc == 16) {
+    	sprintf(final_hypo, "%d inches", hypint + 1);
     } else {
         sprintf(final_hypo, "%d %s inches", hypint, options[hfrc]);
     }
 
     //clear the variables
-    side_x_dec = 0;
-    side_y_dec = 0;
+    hypote = 0;
+
+
     free(xvalue);
     free(yvalue);
+
 }
 
 
@@ -147,13 +191,14 @@ void FieldTypeHandler_y(struct RDUIFieldData* data) {
 
 int main(int argv, char* argc[]) {
     RDUIInit();
+    poulateTapeMeasureLUT();
 
     // Load image
 	int width, height, channels;
 	unsigned char *img = stbi_load("resources/calcbut.png", &width, &height, &channels, 0);
 	if(img == NULL)
 	{
-		printf("You ain't got no pict-shuh\n");
+		printf("image failed to load\n");
 		exit(1);
 	}
 
@@ -267,8 +312,6 @@ int main(int argv, char* argc[]) {
 
 	while(1)
 	{
-
-
         short w, h;
 		CNFGClearFrame();
 		CNFGHandleInput();
@@ -341,19 +384,30 @@ int main(int argv, char* argc[]) {
         CNFGColor( 0xffffffff );
 
         CNFGPenX = 995; CNFGPenY = 375;
-		CNFGDrawText( "inches", 3 );
+		CNFGDrawNiceText( "inches", 3 );
 
         CNFGPenX = 1352; CNFGPenY = 375;
-		CNFGDrawText( "inches", 3 );
+		CNFGDrawNiceText( "inches", 3 );
 
         RDUIDispatchEvent(menu, RDUIEvent_render, NULL);
 
         CNFGPenX = 5; CNFGPenY = 5;
-		CNFGDrawText( final_hypo, 20 );
+		CNFGDrawNiceText( final_hypo, 16 );
 
         CNFGBlitImage((unsigned int*)img, 25, 600, width, height);
 
         CNFGSwapBuffers();
+        usleep(10000);
 	}
-    return 0;
+
+	free(xvalue);
+    free(yvalue);
+   	free(options);
+   	free(menu);
+   	free(field_x);
+   	free(field_y);
+	free(button);
+	stbi_image_free(img);
+
+   	return 0;
 }
